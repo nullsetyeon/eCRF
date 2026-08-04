@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}최초 관리자 계정 만들기{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h4 class="mb-1">최초 관리자 계정 만들기</h4>
+        <p class="text-muted small">이 화면은 관리자 계정이 하나도 없을 때만 보이고, 계정을 만들고 나면 자동으로 다시 접속되지 않습니다.</p>
+        {% if error %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">이름</label>
+            <input type="text" name="name" class="form-control" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">이메일 (로그인 아이디로 사용)</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">비밀번호 (8자 이상)</label>
+            <input type="password" name="password" class="form-control" required minlength="8">
+          </div>
+          {% if key_required %}
+          <div class="mb-3">
+            <label class="form-label">설정 키 (Setup Key)</label>
+            <input type="text" name="setup_key" class="form-control" required>
+            <div class="form-text">Render 환경변수 SETUP_ADMIN_KEY에 등록한 값을 입력하세요.</div>
+          </div>
+          {% endif %}
+          <button type="submit" class="btn btn-primary w-100">관리자 계정 만들기</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
