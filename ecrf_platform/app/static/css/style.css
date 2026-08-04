@@ -1,0 +1,6 @@
+body { background-color: #f7f8fa; }
+.field-row { cursor: grab; }
+.field-row.sortable-ghost { opacity: 0.4; }
+.drag-handle { cursor: grab; color: #999; }
+.card { border-radius: 0.6rem; }
+.badge-type { font-size: 0.75rem; }

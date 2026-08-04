@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}내 연구 목록{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>내 연구 목록</h4>
+  {% if current_user.is_platform_admin %}
+    <a href="{{ url_for('admin.studies') }}" class="btn btn-primary btn-sm">+ 새 연구 만들기 / 전체 연구 관리</a>
+  {% endif %}
+</div>
+
+{% if not studies %}
+  <div class="alert alert-info">아직 접근 가능한 연구가 없습니다. {% if current_user.is_platform_admin %}위 버튼으로 새 연구를 만들어보세요.{% else %}연구 관리자에게 초대를 요청하세요.{% endif %}</div>
+{% endif %}
+
+<div class="row g-3">
+  {% for s in studies %}
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">{{ s.name }}</h5>
+          <p class="text-muted mb-1">코드: {{ s.code }}</p>
+          <span class="badge bg-secondary mb-2">{{ '관리자 권한' if my_roles.get(s.id) in ['platform_admin','study_admin'] else '연구원' }}</span>
+          <div class="d-flex gap-2 mt-2">
+            <a href="{{ url_for('researcher.subjects', study_id=s.id) }}" class="btn btn-outline-primary btn-sm">데이터 입력/조회</a>
+            {% if my_roles.get(s.id) in ['platform_admin','study_admin'] %}
+              <a href="{{ url_for('admin.study_detail', study_id=s.id) }}" class="btn btn-outline-secondary btn-sm">연구 설계/관리</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

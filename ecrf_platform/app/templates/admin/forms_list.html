@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}폼 관리 - {{ study.name }}{% endblock %}
+{% block content %}
+<h4>CRF 폼 관리 - {{ study.name }}</h4>
+<a href="{{ url_for('admin.study_detail', study_id=study.id) }}" class="small">&larr; 연구 관리로</a>
+
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <h6>새 폼 추가</h6>
+    <form method="POST" class="row g-2">
+      {{ form.hidden_tag() }}
+      <div class="col-md-5">{{ form.name.label(class="form-label") }}{{ form.name(class="form-control") }}</div>
+      <div class="col-md-4">{{ form.visit_id.label(class="form-label") }}{{ form.visit_id(class="form-select") }}</div>
+      <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check">
+          {{ form.is_repeating(class="form-check-input") }}
+          {{ form.is_repeating.label(class="form-check-label") }}
+        </div>
+      </div>
+      <div class="col-12"><button class="btn btn-primary mt-2">폼 추가하고 문항 설계 시작</button></div>
+    </form>
+  </div>
+</div>
+
+{% for visit in study.visits %}
+  <h6 class="mt-4">{{ visit.name }}{% if visit.window_description %} <span class="text-muted small">({{ visit.window_description }})</span>{% endif %}</h6>
+  <table class="table bg-white shadow-sm">
+    <tbody>
+    {% for ft in forms_by_visit.get(visit.id, []) %}
+      <tr>
+        <td>{{ ft.name }}{% if ft.is_repeating %} <span class="badge bg-info text-dark">반복입력</span>{% endif %}</td>
+        <td class="text-muted small">{{ ft.fields|length }}개 문항</td>
+        <td class="text-end">
+          <a href="{{ url_for('admin.form_builder', form_id=ft.id) }}" class="btn btn-sm btn-primary">문항 설계</a>
+          <form method="POST" action="{{ url_for('admin.delete_form', form_id=ft.id) }}" class="d-inline" onsubmit="return confirm('이 폼과 관련 데이터가 모두 삭제됩니다. 계속할까요?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger">삭제</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td class="text-muted">이 방문에 연결된 폼이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="text-muted">먼저 <a href="{{ url_for('admin.visits', study_id=study.id) }}">방문을 추가</a>해주세요.</p>
+{% endfor %}
+
+<h6 class="mt-4">방문 비종속 폼 (반복기록: 이상반응, 병용약물 로그 등)</h6>
+<table class="table bg-white shadow-sm">
+  <tbody>
+  {% for ft in unbound %}
+    <tr>
+      <td>{{ ft.name }}{% if ft.is_repeating %} <span class="badge bg-info text-dark">반복입력</span>{% endif %}</td>
+      <td class="text-muted small">{{ ft.fields|length }}개 문항</td>
+      <td class="text-end">
+        <a href="{{ url_for('admin.form_builder', form_id=ft.id) }}" class="btn btn-sm btn-primary">문항 설계</a>
+        <form method="POST" action="{{ url_for('admin.delete_form', form_id=ft.id) }}" class="d-inline" onsubmit="return confirm('이 폼과 관련 데이터가 모두 삭제됩니다. 계속할까요?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger">삭제</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td class="text-muted">없음</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

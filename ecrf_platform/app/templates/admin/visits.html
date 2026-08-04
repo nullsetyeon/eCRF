@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}방문 관리 - {{ study.name }}{% endblock %}
+{% block content %}
+<h4>방문(Visit) 스케줄 - {{ study.name }}</h4>
+<a href="{{ url_for('admin.study_detail', study_id=study.id) }}" class="small">&larr; 연구 관리로</a>
+
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <h6>방문 추가</h6>
+    <form method="POST" class="row g-2">
+      {{ form.hidden_tag() }}
+      <div class="col-md-4">{{ form.name.label(class="form-label") }}{{ form.name(class="form-control") }}</div>
+      <div class="col-md-4">{{ form.window_description.label(class="form-label") }}{{ form.window_description(class="form-control") }}</div>
+      <div class="col-md-4 d-flex align-items-end">
+        <div class="form-check">
+          {{ form.allow_repeat(class="form-check-input") }}
+          {{ form.allow_repeat.label(class="form-check-label") }}
+        </div>
+      </div>
+      <div class="col-12"><button class="btn btn-primary mt-2">추가</button></div>
+    </form>
+  </div>
+</div>
+
+<table class="table bg-white shadow-sm align-middle">
+  <thead><tr><th>순서</th><th>방문명</th><th>시기</th><th>반복 허용</th><th></th></tr></thead>
+  <tbody>
+  {% for v in study.visits %}
+    <tr>
+      <td>
+        <form method="POST" action="{{ url_for('admin.move_visit', visit_id=v.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="direction" value="up"><button class="btn btn-sm btn-light">▲</button></form>
+        <form method="POST" action="{{ url_for('admin.move_visit', visit_id=v.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="direction" value="down"><button class="btn btn-sm btn-light">▼</button></form>
+      </td>
+      <td>{{ v.name }}</td>
+      <td>{{ v.window_description or '-' }}</td>
+      <td>{{ '예' if v.allow_repeat else '아니오' }}</td>
+      <td>
+        <a href="{{ url_for('admin.edit_visit', visit_id=v.id) }}" class="btn btn-sm btn-outline-secondary">수정</a>
+        <form method="POST" action="{{ url_for('admin.delete_visit', visit_id=v.id) }}" class="d-inline" onsubmit="return confirm('이 방문과 연결된 폼/데이터가 모두 삭제됩니다. 계속할까요?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger">삭제</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="text-muted">아직 방문이 없습니다. 위에서 추가해주세요.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

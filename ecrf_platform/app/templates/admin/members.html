@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}구성원 관리 - {{ study.name }}{% endblock %}
+{% block content %}
+<h4>구성원 관리 - {{ study.name }}</h4>
+<a href="{{ url_for('admin.study_detail', study_id=study.id) }}" class="small">&larr; 연구 관리로</a>
+
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <h6>연구원 초대</h6>
+    <form method="POST" class="row g-2">
+      {{ form.hidden_tag() }}
+      <div class="col-md-3">{{ form.name.label(class="form-label") }}{{ form.name(class="form-control") }}</div>
+      <div class="col-md-3">{{ form.email.label(class="form-label") }}{{ form.email(class="form-control") }}</div>
+      <div class="col-md-3">{{ form.role.label(class="form-label") }}{{ form.role(class="form-select") }}</div>
+      <div class="col-md-3">{{ form.temp_password.label(class="form-label") }}{{ form.temp_password(class="form-control", placeholder="비워두면 changeme123!") }}</div>
+      <div class="col-12"><button class="btn btn-primary mt-2">초대 / 권한 저장</button></div>
+    </form>
+    <p class="small text-muted mt-2 mb-0">신규 이메일이면 계정이 새로 만들어집니다. 임시 비밀번호는 안전한 방법(직접 전달 등)으로 알려주시고, 최초 로그인 후 변경을 권장하세요.</p>
+  </div>
+</div>
+
+<table class="table bg-white shadow-sm">
+  <thead><tr><th>이름</th><th>이메일</th><th>권한</th><th></th></tr></thead>
+  <tbody>
+  {% for m in study.memberships %}
+    <tr>
+      <td>{{ m.user.name }}</td>
+      <td>{{ m.user.email }}</td>
+      <td>{{ dict(study_admin='연구 관리자', researcher='연구원').get(m.role, m.role) }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin.remove_member', study_id=study.id, membership_id=m.id) }}" onsubmit="return confirm('접근 권한을 제거할까요?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger">제거</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

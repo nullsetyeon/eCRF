@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}문항 설계 - {{ ft.name }}{% endblock %}
+{% block content %}
+<h4>{{ ft.name }} - 문항 설계</h4>
+<a href="{{ url_for('admin.forms_list', study_id=ft.study_id) }}" class="small">&larr; 폼 목록으로</a>
+
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <h6>기존 문항 ({{ ft.fields|length }}개) - 드래그해서 순서를 바꿀 수 있습니다</h6>
+    <ul id="field-list" class="list-group">
+      {% for f in ft.fields %}
+        <li class="list-group-item d-flex justify-content-between align-items-center field-row" data-id="{{ f.id }}">
+          <div>
+            <span class="drag-handle me-2">⠿</span>
+            <strong>{{ f.label }}</strong>
+            <span class="text-muted small">({{ f.variable_name }})</span>
+            <span class="badge bg-light text-dark badge-type">{{ dict(field_types)[f.field_type] }}</span>
+            {% if f.required %}<span class="badge bg-danger">필수</span>{% endif %}
+            {% if f.get_branch_condition() %}<span class="badge bg-warning text-dark">분기</span>{% endif %}
+          </div>
+          <div>
+            <a href="{{ url_for('admin.edit_field', field_id=f.id) }}" class="btn btn-sm btn-outline-secondary">수정</a>
+            <form method="POST" action="{{ url_for('admin.delete_field', field_id=f.id) }}" class="d-inline" onsubmit="return confirm('이 문항을 삭제할까요?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger">삭제</button>
+            </form>
+          </div>
+        </li>
+      {% else %}
+        <li class="list-group-item text-muted">아직 문항이 없습니다. 아래에서 첫 문항을 추가해보세요.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <h6>새 문항 추가</h6>
+    {% set action_url = url_for('admin.new_field', form_id=ft.id) %}
+    {% set submit_label = '문항 추가' %}
+    {% set other_fields = ft.fields %}
+    {% set f = None %}
+    {% set options_text = '' %}
+    {% set branch = {} %}
+    {% include "admin/_field_form.html" with context %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var fieldList = document.getElementById('field-list');
+if (fieldList) {
+  new Sortable(fieldList, {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: function() {
+      var ids = Array.from(fieldList.querySelectorAll('.field-row')).map(function(li) { return parseInt(li.dataset.id); });
+      fetch("{{ url_for('admin.reorder_fields', form_id=ft.id) }}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}"},
+        body: JSON.stringify({field_ids: ids})
+      });
+    }
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.subject_code }} - {{ study.name }}{% endblock %}
+{% block content %}
+<h4>대상자 {{ subject.subject_code }} <span class="text-muted small">({{ study.name }})</span></h4>
+<a href="{{ url_for('researcher.subjects', study_id=study.id) }}" class="small">&larr; 대상자 목록으로</a>
+{% if subject.memo %}<p class="text-muted mt-2">메모: {{ subject.memo }}</p>{% endif %}
+
+<h6 class="mt-4">방문별 CRF</h6>
+<div class="row g-3">
+{% for row in visit_rows %}
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title">{{ row.visit.name }} {% if row.visit.window_description %}<span class="text-muted small">({{ row.visit.window_description }})</span>{% endif %}</h6>
+
+        {% if row.visit.allow_repeat %}
+          {% for vi in row.instances %}
+            <div class="d-flex justify-content-between border-bottom py-1">
+              <span>{{ vi.instance_label or ('방문 #' ~ loop.index) }}{% if vi.visit_date %} - {{ vi.visit_date }}{% endif %}</span>
+              <a href="{{ url_for('researcher.visit_instance_detail', study_id=study.id, subject_id=subject.id, vi_id=vi.id) }}" class="btn btn-sm btn-outline-primary">열기</a>
+            </div>
+          {% endfor %}
+          <form method="POST" action="{{ url_for('researcher.start_visit', study_id=study.id, subject_id=subject.id, visit_id=row.visit.id) }}" class="row g-1 mt-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-5"><input type="text" name="instance_label" class="form-control form-control-sm" placeholder="회차 (예: 1차)"></div>
+            <div class="col-5"><input type="date" name="visit_date" class="form-control form-control-sm"></div>
+            <div class="col-2"><button class="btn btn-sm btn-primary w-100">+ 추가</button></div>
+          </form>
+        {% else %}
+          {% if row.instances %}
+            <a href="{{ url_for('researcher.visit_instance_detail', study_id=study.id, subject_id=subject.id, vi_id=row.instances[0].id) }}" class="btn btn-sm btn-outline-primary">열기 ({{ row.forms|length }}개 폼)</a>
+          {% else %}
+            <form method="POST" action="{{ url_for('researcher.start_visit', study_id=study.id, subject_id=subject.id, visit_id=row.visit.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-primary">방문 시작</button>
+            </form>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% else %}
+  <p class="text-muted">이 연구에 정의된 방문이 없습니다.</p>
+{% endfor %}
+</div>
+
+{% if unbound_forms %}
+<h6 class="mt-4">반복 기록 폼 (방문 비종속)</h6>
+<div class="row g-3">
+  {% for ft in unbound_forms %}
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h6>{{ ft.name }}</h6>
+          <p class="text-muted small mb-2">{{ unbound_counts.get(ft.id, 0) }}건 기록됨</p>
+          <a href="{{ url_for('researcher.form_records', study_id=study.id, subject_id=subject.id, form_id=ft.id) }}" class="btn btn-sm btn-outline-primary">조회/기록 추가</a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

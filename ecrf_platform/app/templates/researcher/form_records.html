@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ ft.name }} - {{ subject.subject_code }}{% endblock %}
+{% block content %}
+<h4>{{ subject.subject_code }} - {{ ft.name }}</h4>
+<a href="{{ back_url }}" class="small">&larr; 뒤로</a>
+
+<div class="my-3">
+  {% if vi %}
+    <a href="{{ url_for('researcher.new_form_record', study_id=study.id, subject_id=subject.id, form_id=ft.id, vi_id=vi.id) }}" class="btn btn-primary btn-sm">+ 새 기록 추가</a>
+  {% else %}
+    <a href="{{ url_for('researcher.new_form_record', study_id=study.id, subject_id=subject.id, form_id=ft.id) }}" class="btn btn-primary btn-sm">+ 새 기록 추가</a>
+  {% endif %}
+</div>
+
+<table class="table bg-white shadow-sm">
+  <thead><tr><th>#</th><th>최종 수정</th><th></th></tr></thead>
+  <tbody>
+  {% for r in records %}
+    <tr>
+      <td>{{ r.repeat_index + 1 }}</td>
+      <td>{{ r.updated_at.strftime('%Y-%m-%d %H:%M') if r.updated_at }}</td>
+      <td><a href="{{ url_for('researcher.edit_form_record', study_id=study.id, subject_id=subject.id, record_id=r.id) }}" class="btn btn-sm btn-outline-secondary">보기/수정</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="3" class="text-muted">아직 기록이 없습니다.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

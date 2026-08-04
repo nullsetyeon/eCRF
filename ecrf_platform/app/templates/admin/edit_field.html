@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}문항 수정{% endblock %}
+{% block content %}
+<h4>문항 수정 - {{ ft.name }}</h4>
+<a href="{{ url_for('admin.form_builder', form_id=ft.id) }}" class="small">&larr; 문항 설계로</a>
+
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    {% set action_url = url_for('admin.edit_field', field_id=field.id) %}
+    {% set submit_label = '저장' %}
+    {% set f = field %}
+    {% include "admin/_field_form.html" with context %}
+  </div>
+</div>
+{% endblock %}

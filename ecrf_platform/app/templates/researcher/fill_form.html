@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ ft.name }} 입력 - {{ subject.subject_code }}{% endblock %}
+{% block content %}
+<h4>{{ subject.subject_code }} - {{ ft.name }}</h4>
+<a href="{{ back_url }}" class="small">&larr; 뒤로</a>
+
+<form method="POST" class="card shadow-sm mt-3">
+  <div class="card-body">
+    {{ '' }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for f in fields %}
+      {% set cond = f.get_branch_condition() %}
+      <div class="mb-3 field-wrapper"
+           {% if cond %}data-depends-on="{{ cond.field }}" data-op="{{ cond.op }}" data-value="{{ cond.value }}"{% endif %}>
+
+        {% if f.field_type == 'section_header' %}
+          <h6 class="border-bottom pb-1 mt-3">{{ f.label }}</h6>
+
+        {% else %}
+          <label class="form-label">{{ f.label }}{% if f.unit %} <span class="text-muted">({{ f.unit }})</span>{% endif %}{% if f.required %} <span class="text-danger">*</span>{% endif %}</label>
+          {% if f.help_text %}<div class="form-text mt-0 mb-1">{{ f.help_text }}</div>{% endif %}
+
+          {% if f.field_type in ('text',) %}
+            <input type="text" name="{{ f.variable_name }}" class="form-control branch-input" data-var="{{ f.variable_name }}" value="{{ values.get(f.variable_name, '') }}">
+
+          {% elif f.field_type == 'textarea' %}
+            <textarea name="{{ f.variable_name }}" class="form-control branch-input" data-var="{{ f.variable_name }}" rows="3">{{ values.get(f.variable_name, '') }}</textarea>
+
+          {% elif f.field_type == 'number' %}
+            <input type="number" step="any" name="{{ f.variable_name }}" class="form-control branch-input" data-var="{{ f.variable_name }}" value="{{ values.get(f.variable_name, '') }}">
+
+          {% elif f.field_type == 'date' %}
+            <input type="date" name="{{ f.variable_name }}" class="form-control branch-input" data-var="{{ f.variable_name }}" value="{{ values.get(f.variable_name, '') }}">
+
+          {% elif f.field_type == 'radio' %}
+            {% for opt in f.get_options() %}
+              <div class="form-check">
+                <input type="radio" class="form-check-input branch-input" data-var="{{ f.variable_name }}" name="{{ f.variable_name }}" value="{{ opt.value }}" id="opt-{{ f.id }}-{{ loop.index }}" {% if values.get(f.variable_name)==opt.value %}checked{% endif %}>
+                <label class="form-check-label" for="opt-{{ f.id }}-{{ loop.index }}">{{ opt.label }}</label>
+              </div>
+            {% endfor %}
+
+          {% elif f.field_type == 'select' %}
+            <select name="{{ f.variable_name }}" class="form-select branch-input" data-var="{{ f.variable_name }}">
+              <option value="">-- 선택 --</option>
+              {% for opt in f.get_options() %}
+                <option value="{{ opt.value }}" {% if values.get(f.variable_name)==opt.value %}selected{% endif %}>{{ opt.label }}</option>
+              {% endfor %}
+            </select>
+
+          {% elif f.field_type == 'checkbox' %}
+            {% set checked_vals = values.get(f.variable_name, '')|from_json %}
+            {% for opt in f.get_options() %}
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input branch-input" data-var="{{ f.variable_name }}" name="{{ f.variable_name }}" value="{{ opt.value }}" id="opt-{{ f.id }}-{{ loop.index }}" {% if opt.value in checked_vals %}checked{% endif %}>
+                <label class="form-check-label" for="opt-{{ f.id }}-{{ loop.index }}">{{ opt.label }}</label>
+              </div>
+            {% endfor %}
+
+          {% elif f.field_type == 'calculated' %}
+            <input type="text" class="form-control" value="{{ values.get(f.variable_name, '') }}" readonly placeholder="저장 시 자동 계산됩니다">
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary">저장</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var wrappers = Array.from(document.querySelectorAll('.field-wrapper[data-depends-on]'));
+
+  function currentValue(varName) {
+    var inputs = document.querySelectorAll('.branch-input[data-var="' + varName + '"]');
+    if (!inputs.length) return null;
+    var first = inputs[0];
+    if (first.type === 'checkbox') {
+      return Array.from(inputs).filter(function(i){return i.checked;}).map(function(i){return i.value;});
+    }
+    if (first.type === 'radio') {
+      var checked = Array.from(inputs).find(function(i){return i.checked;});
+      return checked ? checked.value : '';
+    }
+    return first.value;
+  }
+
+  function evaluate() {
+    wrappers.forEach(function(w) {
+      var dep = w.dataset.dependsOn, op = w.dataset.op, target = w.dataset.value;
+      var val = currentValue(dep);
+      var visible;
+      if (op === 'in') {
+        visible = Array.isArray(val) ? val.indexOf(target) !== -1 : val === target;
+      } else if (op === 'neq') {
+        visible = val !== target;
+      } else {
+        visible = val === target;
+      }
+      w.style.display = visible ? '' : 'none';
+    });
+  }
+
+  document.addEventListener('input', evaluate);
+  document.addEventListener('change', evaluate);
+  evaluate();
+})();
+</script>
+{% endblock %}

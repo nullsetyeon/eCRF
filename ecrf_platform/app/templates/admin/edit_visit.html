@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}방문 수정{% endblock %}
+{% block content %}
+<h4>방문 수정</h4>
+<form method="POST" class="row g-2 mt-2">
+  {{ form.hidden_tag() }}
+  <div class="col-md-4">{{ form.name.label(class="form-label") }}{{ form.name(class="form-control") }}</div>
+  <div class="col-md-4">{{ form.window_description.label(class="form-label") }}{{ form.window_description(class="form-control") }}</div>
+  <div class="col-md-4 d-flex align-items-end">
+    <div class="form-check">
+      {{ form.allow_repeat(class="form-check-input") }}
+      {{ form.allow_repeat.label(class="form-check-label") }}
+    </div>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary mt-2">저장</button>
+    <a href="{{ url_for('admin.visits', study_id=visit.study_id) }}" class="btn btn-link mt-2">취소</a>
+  </div>
+</form>
+{% endblock %}

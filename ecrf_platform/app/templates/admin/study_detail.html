@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ study.name }} - 연구 관리{% endblock %}
+{% block content %}
+<h4 class="mb-1">{{ study.name }}</h4>
+<p class="text-muted">코드: {{ study.code }}{% if study.description %} · {{ study.description }}{% endif %}</p>
+
+<div class="row g-3 mt-2">
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6>1. 방문(Visit) 스케줄</h6>
+        <p class="text-muted small">V1, V2, V3 ... 같은 연구 방문 일정을 먼저 정의하세요.</p>
+        <a href="{{ url_for('admin.visits', study_id=study.id) }}" class="btn btn-sm btn-primary">방문 관리 ({{ study.visits|length }}개)</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6>2. CRF 폼 & 문항 설계</h6>
+        <p class="text-muted small">각 방문에 들어갈 폼을 만들고, 웹 화면에서 문항을 하나씩 추가하세요.</p>
+        <a href="{{ url_for('admin.forms_list', study_id=study.id) }}" class="btn btn-sm btn-primary">폼 관리</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6>3. 연구원 초대/권한</h6>
+        <p class="text-muted small">함께 데이터를 입력할 연구원을 초대하고 권한을 설정하세요.</p>
+        <a href="{{ url_for('admin.members', study_id=study.id) }}" class="btn btn-sm btn-primary">구성원 관리</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4">
+  <a href="{{ url_for('researcher.subjects', study_id=study.id) }}" class="btn btn-outline-success">데이터 입력 화면으로 이동 (대상자 등록/입력)</a>
+</div>
+{% endblock %}

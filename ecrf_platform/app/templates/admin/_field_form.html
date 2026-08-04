@@ -1,0 +1,93 @@
+{# 필드(문항) 추가/수정 공통 폼. 사용처에서 action_url, submit_label, other_fields, field_types, options_types,
+   f(수정대상 Field 또는 None), options_text, branch(dict) 변수를 전달해야 함 #}
+<form method="POST" action="{{ action_url }}" class="field-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  <div class="row g-2">
+    <div class="col-md-4">
+      <label class="form-label">변수명 (영문, 계산식/분기에서 참조)</label>
+      <input type="text" name="variable_name" class="form-control" value="{{ f.variable_name if f else '' }}" placeholder="예: sbp" required pattern="[a-zA-Z][a-zA-Z0-9_]*">
+    </div>
+    <div class="col-md-8">
+      <label class="form-label">문항 라벨 (질문 내용)</label>
+      <input type="text" name="label" class="form-control" value="{{ f.label if f else '' }}" placeholder="예: 수축기 혈압" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">문항 유형</label>
+      <select name="field_type" class="form-select field-type-select">
+        {% for value, text in field_types %}
+          <option value="{{ value }}" {% if f and f.field_type==value %}selected{% endif %}>{{ text }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">단위 (선택)</label>
+      <input type="text" name="unit" class="form-control" value="{{ f.unit if f and f.unit else '' }}" placeholder="예: mmHg">
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <div class="form-check">
+        <input type="checkbox" name="required" class="form-check-input" id="req-{{ f.id if f else 'new' }}" {% if f and f.required %}checked{% endif %}>
+        <label class="form-check-label" for="req-{{ f.id if f else 'new' }}">필수 입력</label>
+      </div>
+    </div>
+    <div class="col-12">
+      <label class="form-label">도움말 (선택, 입력화면에 작은 글씨로 표시)</label>
+      <input type="text" name="help_text" class="form-control" value="{{ f.help_text if f and f.help_text else '' }}">
+    </div>
+
+    <div class="col-12 options-block" style="display:none;">
+      <label class="form-label">선택지 (한 줄에 하나씩, "값|보이는텍스트" 형식. 파이프 없으면 동일하게 사용)</label>
+      <textarea name="options_text" class="form-control" rows="4" placeholder="1|예&#10;0|아니오">{{ options_text or '' }}</textarea>
+    </div>
+
+    <div class="col-12 calc-block" style="display:none;">
+      <label class="form-label">계산식 (같은 폼의 다른 변수명을 사용한 산술식)</label>
+      <input type="text" name="calc_formula" class="form-control" value="{{ f.calc_formula if f and f.calc_formula else '' }}" placeholder="예: round(weight / ((height/100) ** 2), 1)">
+      <div class="form-text">사용 가능: + - * / ** round() abs() min() max(). 예: BMI = round(weight/((height/100)**2), 1)</div>
+    </div>
+
+    <div class="col-12 mt-2">
+      <label class="form-label">분기 로직 (선택) - 다른 문항 응답값에 따라 이 문항을 보이거나 숨김</label>
+      <div class="row g-2">
+        <div class="col-md-5">
+          <select name="branch_field" class="form-select">
+            <option value="">-- 항상 표시 --</option>
+            {% for of in other_fields %}
+              <option value="{{ of.variable_name }}" {% if branch.get('field')==of.variable_name %}selected{% endif %}>{{ of.label }} ({{ of.variable_name }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="branch_op" class="form-select">
+            <option value="eq" {% if branch.get('op')=='eq' %}selected{% endif %}>= (같음)</option>
+            <option value="neq" {% if branch.get('op')=='neq' %}selected{% endif %}>≠ (다름)</option>
+            <option value="in" {% if branch.get('op')=='in' %}selected{% endif %}>포함 (다중선택용)</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" name="branch_value" class="form-control" value="{{ branch.get('value','') }}" placeholder="비교할 값 (선택지의 '값' 사용)">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mt-3">
+      <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+    </div>
+  </div>
+</form>
+<script>
+(function() {
+  document.querySelectorAll('.field-form').forEach(function(form) {
+    var typeSelect = form.querySelector('.field-type-select');
+    var optionsBlock = form.querySelector('.options-block');
+    var calcBlock = form.querySelector('.calc-block');
+    var optionTypes = {{ options_types|list|tojson }};
+    function update() {
+      var v = typeSelect.value;
+      optionsBlock.style.display = optionTypes.includes(v) ? '' : 'none';
+      calcBlock.style.display = (v === 'calculated') ? '' : 'none';
+    }
+    typeSelect.addEventListener('change', update);
+    update();
+  });
+})();
+</script>
